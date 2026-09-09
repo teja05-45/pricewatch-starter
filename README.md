@@ -118,10 +118,12 @@ Rules live in `alerts.yaml` and are evaluated by `agents/watcher.py` after each 
 
 ## 5. Submitting and grading
 
-Read `SUBMISSION.md`. Short version: push to a **private** GitHub repo, invite our grader
-account, submit the URL on the form, get a score card by email within ~15 minutes. You can
-submit **three times**; the last submission counts. Use the first one early — it's the
-cheapest way to find out you misread something.
+Read `SUBMISSION.md`. Short version: push to a **private** GitHub repo, install the
+[PriceWatch Grader app](https://github.com/apps/pricewatch-grader/installations/new) on it,
+submit the URL at **https://pricewatch-submit.vercel.app**, confirm the link we email you,
+and get a score card by email within ~15 minutes. You can submit **three times**; the last
+submission counts. Use the first one early — it's the cheapest way to find out you misread
+something.
 
 Scoring (100):
 
