@@ -60,7 +60,7 @@ hidden from you that a browser doesn't also have to deal with — open DevTools 
 You need Python 3.10+ and Docker (or just use the hosted stores instance).
 
 ```bash
-# 1. The fake internet (Docker; or use the hosted instance at <STORES_URL> for light development)
+# 1. The fake internet (Docker; or use the hosted instance at https://pricewatch-stores.vercel.app for light development)
 docker run --rm -p 4000:4000 -e STORE_SEED=public ghcr.io/i95dev/pricewatch-stores:latest
 #    ^ leave this running. Change STORE_SEED to test against a catalogue you haven't seen.
 
