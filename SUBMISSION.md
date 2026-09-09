@@ -20,9 +20,11 @@
 
 1. Push your work to a **private** GitHub repository. Any name. Keep the history — we like
    seeing how you got there.
-2. Add the GitHub user **`i95dev-grader`** as a collaborator (Settings → Collaborators → Add).
-   Read access is enough.
-3. Open the submission form: **<SUBMISSION_FORM_URL>**. Enter your email (the one we
+2. Install the **PriceWatch Grader** GitHub App on that repository:
+   **https://github.com/apps/pricewatch-grader/installations/new** → *Only select
+   repositories* → choose your submission repo. It requests read-only access to repository
+   contents and nothing else, and you can uninstall it the moment you hear back from us.
+3. Open the submission form: **https://pricewatch-submit.vercel.app**. Enter your email (the one we
    contacted you on), the repository URL, and optionally the commit SHA (default: HEAD of the
    default branch).
 4. Within about 15 minutes you'll get an email with your score card: points per section and
