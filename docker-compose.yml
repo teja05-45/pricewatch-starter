@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  fake-stores:
+    image: ghcr.io/i95dev/pricewatch-stores:latest
+    container_name: pricewatch-stores
+    ports:
+      - "4000:4000"
+    environment:
+      - STORE_SEED=public
+    restart: unless-stopped
+
+  pricewatch-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pricewatch-app
+    ports:
+      - "8000:8000"
+    environment:
+      - STORES_URL=http://fake-stores:4000
+      - PRICEWATCH_PROVIDER=${PRICEWATCH_PROVIDER:-echo}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    depends_on:
+      - fake-stores
+    restart: unless-stopped

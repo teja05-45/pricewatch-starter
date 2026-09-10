@@ -1,0 +1,67 @@
+[
+  {
+   "id": "nk-000",
+   "store": "nordkart",
+   "file": "nk-000.html",
+   "url": "https://nordkart.example/p/nk-000",
+   "expected": {
+    "name": "Fjell Espressomaskin",
+    "price_cents": 292600,
+    "currency": "NOK",
+    "availability": "in_stock",
+    "pack_size": 1
+   }
+  },
+  {
+   "id": "nk-044",
+   "store": "nordkart",
+   "file": "nk-044.html",
+   "url": "https://nordkart.example/p/nk-044",
+   "expected": {
+    "name": "Fjell Robotstøvsuger",
+    "price_cents": 760800,
+    "currency": "NOK",
+    "availability": "out_of_stock",
+    "pack_size": 1
+   }
+  },
+  {
+   "id": "bz-045",
+   "store": "bazaario",
+   "file": "bz-045.html",
+   "url": "https://bazaario.example/dp/bz-045",
+   "expected": {
+    "name": "Vela Steel Tiffin Box",
+    "price_cents": 9939800,
+    "currency": "INR",
+    "availability": "in_stock",
+    "pack_size": 3
+   }
+  },
+  {
+   "id": "bz-046",
+   "store": "bazaario",
+   "file": "bz-046.html",
+   "url": "https://bazaario.example/dp/bz-046",
+   "expected": {
+    "name": "Kiran Pressure Cooker 5L",
+    "price_cents": 404400,
+    "currency": "INR",
+    "availability": "in_stock",
+    "pack_size": 1
+   }
+  },
+  {
+   "id": "bz-052",
+   "store": "bazaario",
+   "file": "bz-052.html",
+   "url": "https://bazaario.example/dp/bz-052",
+   "expected": {
+    "name": "Aarav Smart TV 55\"",
+    "price_cents": 1806200,
+    "currency": "INR",
+    "availability": "in_stock",
+    "pack_size": 1
+   }
+  }
+]

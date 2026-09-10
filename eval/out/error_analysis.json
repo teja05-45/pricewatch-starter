@@ -1,0 +1,804 @@
+[
+  {
+    "snapshot": "nk-003",
+    "store": "nordkart",
+    "expected": {
+      "name": "Havn Elektrisk tannb\u00c3\u00b8rste",
+      "price_cents": 787800,
+      "currency": "NOK",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "nordkart",
+      "product_id": "nk-003",
+      "url": "https://nordkart.example/p/nk-003",
+      "name": "Havn Elektrisk tannb\u00f8rste",
+      "price_cents": 761600,
+      "currency": "NOK",
+      "compare_at_cents": 787800,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:16:44.173446+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "nk-008",
+    "store": "nordkart",
+    "expected": {
+      "name": "Havn Luftrenser",
+      "price_cents": 980080,
+      "currency": "NOK",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "nordkart",
+      "product_id": "nk-008",
+      "url": "https://nordkart.example/p/nk-008",
+      "name": "Havn Luftrenser",
+      "price_cents": 1225100,
+      "currency": "NOK",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:17:45.347898+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "nk-011",
+    "store": "nordkart",
+    "expected": {
+      "name": "Fjell USB-C-lader 65W",
+      "price_cents": 1427100,
+      "currency": "NOK",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "nordkart",
+      "product_id": "nk-011",
+      "url": "https://nordkart.example/p/nk-011",
+      "name": "",
+      "price_cents": null,
+      "currency": "NOK",
+      "compare_at_cents": null,
+      "availability": "unknown",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:18:17.470486+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price",
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "nk-012",
+    "store": "nordkart",
+    "expected": {
+      "name": "Fjell Robotst\u00c3\u00b8vsuger",
+      "price_cents": 313000,
+      "currency": "NOK",
+      "availability": "out_of_stock",
+      "pack_size": 1
+    },
+    "predicted": null,
+    "error_types": [
+      "wrong_price",
+      "wrong_currency",
+      "wrong_availability",
+      "wrong_pack_size",
+      "malformed_output"
+    ]
+  },
+  {
+    "snapshot": "nk-014",
+    "store": "nordkart",
+    "expected": {
+      "name": "Havn Hodelykt",
+      "price_cents": 1097800,
+      "currency": "NOK",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "nordkart",
+      "product_id": "nk-014",
+      "url": "https://nordkart.example/p/nk-014",
+      "name": "Havn Hodelykt",
+      "price_cents": 1097800,
+      "currency": "NOK",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 6,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:19:01.716975+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_pack_size"
+    ]
+  },
+  {
+    "snapshot": "nk-022",
+    "store": "nordkart",
+    "expected": {
+      "name": "Nordlys Termos 1L",
+      "price_cents": 41200,
+      "currency": "NOK",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "nordkart",
+      "product_id": "nk-022",
+      "url": "https://nordkart.example/p/nk-022",
+      "name": "Nordlys Termos 1L",
+      "price_cents": 41200,
+      "currency": "NOK",
+      "compare_at_cents": null,
+      "availability": "out_of_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:20:58.395462+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "nk-027",
+    "store": "nordkart",
+    "expected": {
+      "name": "Fjell Luftrenser",
+      "price_cents": 391100,
+      "currency": "NOK",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "nordkart",
+      "product_id": "nk-027",
+      "url": "https://nordkart.example/p/nk-027",
+      "name": "Fjell Luftrenser",
+      "price_cents": 391100,
+      "currency": "NOK",
+      "compare_at_cents": null,
+      "availability": "unknown",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:22:11.395299+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "nk-031",
+    "store": "nordkart",
+    "expected": {
+      "name": "Havn St\u00c3\u00b8vsugerposer",
+      "price_cents": 1267000,
+      "currency": "NOK",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "nordkart",
+      "product_id": "nk-031",
+      "url": "https://nordkart.example/p/nk-031",
+      "name": "Havn St\u00f8vsugerposer",
+      "price_cents": 1276000,
+      "currency": "NOK",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:23:09.259477+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "nk-033",
+    "store": "nordkart",
+    "expected": {
+      "name": "Bre St\u00c3\u00b8vsugerposer",
+      "price_cents": 775500,
+      "currency": "NOK",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": null,
+    "error_types": [
+      "wrong_price",
+      "wrong_currency",
+      "wrong_availability",
+      "wrong_pack_size",
+      "malformed_output"
+    ]
+  },
+  {
+    "snapshot": "nk-035",
+    "store": "nordkart",
+    "expected": {
+      "name": "Fjell Gaming-mus",
+      "price_cents": 776600,
+      "currency": "NOK",
+      "availability": "in_stock",
+      "pack_size": 6
+    },
+    "predicted": {
+      "store": "nordkart",
+      "product_id": "nk-035",
+      "url": "https://nordkart.example/p/nk-035",
+      "name": "Fjell Gaming-mus",
+      "price_cents": 776600,
+      "currency": "NOK",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:24:08.476540+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_pack_size"
+    ]
+  },
+  {
+    "snapshot": "bz-047",
+    "store": "bazaario",
+    "expected": {
+      "name": "Kiran Almonds",
+      "price_cents": 1220300,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-047",
+      "url": "https://bazaario.example/dp/bz-047",
+      "name": "Kiran Almonds",
+      "price_cents": 354000,
+      "currency": "INR",
+      "compare_at_cents": 1220300,
+      "availability": "unknown",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:27:07.693063+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price",
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "bz-048",
+    "store": "bazaario",
+    "expected": {
+      "name": "Meera Masala Dabba",
+      "price_cents": 35800,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-048",
+      "url": "https://bazaario.example/dp/bz-048",
+      "name": "Meera Masala Dabba",
+      "price_cents": 35800,
+      "currency": "INR",
+      "compare_at_cents": 343000,
+      "availability": "unknown",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:27:22.352692+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "bz-052",
+    "store": "bazaario",
+    "expected": {
+      "name": "Meera Basmati Rice",
+      "price_cents": 60200,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-052",
+      "url": "https://bazaario.example/dp/bz-052",
+      "name": "Meera Basmati Rice",
+      "price_cents": 1806200,
+      "currency": "INR",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:28:21.391825+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "bz-055",
+    "store": "bazaario",
+    "expected": {
+      "name": "Surya Mixer Grinder 750W",
+      "price_cents": 10657000,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": null,
+    "error_types": [
+      "wrong_price",
+      "wrong_currency",
+      "wrong_availability",
+      "wrong_pack_size",
+      "malformed_output"
+    ]
+  },
+  {
+    "snapshot": "bz-056",
+    "store": "bazaario",
+    "expected": {
+      "name": "Anand Mixer Grinder 750W",
+      "price_cents": 2115300,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-056",
+      "url": "https://bazaario.example/dp/bz-056",
+      "name": "Anand Mixer Grinder 750W",
+      "price_cents": 2115300,
+      "currency": "INR",
+      "compare_at_cents": 3836900,
+      "availability": "unknown",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:29:09.043187+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "bz-058",
+    "store": "bazaario",
+    "expected": {
+      "name": "Surya Masala Dabba",
+      "price_cents": 1755000,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-058",
+      "url": "https://bazaario.example/dp/bz-058",
+      "name": "Surya Masala Dabba (5 kg)",
+      "price_cents": 8775100,
+      "currency": "INR",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:29:37.946211+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "bz-060",
+    "store": "bazaario",
+    "expected": {
+      "name": "Vela Kids Study Table",
+      "price_cents": 2995400,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-060",
+      "url": "https://bazaario.example/dp/bz-060",
+      "name": "Vela Kids Study Table",
+      "price_cents": 2945400,
+      "currency": "INR",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:30:07.118131+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "bz-064",
+    "store": "bazaario",
+    "expected": {
+      "name": "Kiran Basmati Rice",
+      "price_cents": 10621800,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-064",
+      "url": "https://bazaario.example/dp/bz-064",
+      "name": "Kiran Basmati Rice",
+      "price_cents": 10621800,
+      "currency": "INR",
+      "compare_at_cents": 11285000,
+      "availability": "unknown",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:31:06.702583+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "bz-066",
+    "store": "bazaario",
+    "expected": {
+      "name": "Meera Wireless Earbuds",
+      "price_cents": 2114900,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": null,
+    "error_types": [
+      "wrong_price",
+      "wrong_currency",
+      "wrong_availability",
+      "wrong_pack_size",
+      "malformed_output"
+    ]
+  },
+  {
+    "snapshot": "bz-068",
+    "store": "bazaario",
+    "expected": {
+      "name": "Anand Cricket Bat",
+      "price_cents": 3600500,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-068",
+      "url": "https://bazaario.example/dp/bz-068",
+      "name": "Anand Cricket Bat",
+      "price_cents": 3550500,
+      "currency": "INR",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:32:06.446042+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "bz-070",
+    "store": "bazaario",
+    "expected": {
+      "name": "Anand Kurta Set",
+      "price_cents": 6143600,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-070",
+      "url": "https://bazaario.example/dp/bz-070",
+      "name": "Anand Kurta Set",
+      "price_cents": 6143600,
+      "currency": "INR",
+      "compare_at_cents": null,
+      "availability": "out_of_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:32:36.202955+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "bz-072",
+    "store": "bazaario",
+    "expected": {
+      "name": "Surya Trimmer",
+      "price_cents": 13081000,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-072",
+      "url": "https://bazaario.example/dp/bz-072",
+      "name": "Surya Trimmer",
+      "price_cents": 13081000,
+      "currency": "INR",
+      "compare_at_cents": 13207300,
+      "availability": "unknown",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:33:05.728056+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "bz-073",
+    "store": "bazaario",
+    "expected": {
+      "name": "Kiran Kids Study Table",
+      "price_cents": 3631600,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 3
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-073",
+      "url": "https://bazaario.example/dp/bz-073",
+      "name": "Kiran Kids Study Table",
+      "price_cents": 10894700,
+      "currency": "INR",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 3,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:33:20.447635+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "bz-076",
+    "store": "bazaario",
+    "expected": {
+      "name": "Meera Cotton Bedsheet",
+      "price_cents": 14189700,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-076",
+      "url": "https://bazaario.example/dp/bz-076",
+      "name": "Meera Cotton Bedsheet",
+      "price_cents": 14139700,
+      "currency": "INR",
+      "compare_at_cents": 14189700,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:34:05.917093+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "bz-080",
+    "store": "bazaario",
+    "expected": {
+      "name": "Anand Cotton Bedsheet",
+      "price_cents": 14586600,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-080",
+      "url": "https://bazaario.example/dp/bz-080",
+      "name": "Anand Cotton Bedsheet",
+      "price_cents": 14586600,
+      "currency": "INR",
+      "compare_at_cents": 16152600,
+      "availability": "unknown",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:35:05.360659+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "bz-082",
+    "store": "bazaario",
+    "expected": {
+      "name": "Surya Steel Tiffin Box",
+      "price_cents": 8901100,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-082",
+      "url": "https://bazaario.example/dp/bz-082",
+      "name": "Surya Steel Tiffin Box",
+      "price_cents": null,
+      "currency": "INR",
+      "compare_at_cents": null,
+      "availability": "in_stock",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:35:34.905986+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_price"
+    ]
+  },
+  {
+    "snapshot": "bz-084",
+    "store": "bazaario",
+    "expected": {
+      "name": "Anand Kurta Set",
+      "price_cents": 11382200,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": null,
+    "error_types": [
+      "wrong_price",
+      "wrong_currency",
+      "wrong_availability",
+      "wrong_pack_size",
+      "malformed_output"
+    ]
+  },
+  {
+    "snapshot": "bz-085",
+    "store": "bazaario",
+    "expected": {
+      "name": "Anand Pressure Cooker 5L",
+      "price_cents": 12295700,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 3
+    },
+    "predicted": null,
+    "error_types": [
+      "wrong_price",
+      "wrong_currency",
+      "wrong_availability",
+      "wrong_pack_size",
+      "malformed_output"
+    ]
+  },
+  {
+    "snapshot": "bz-088",
+    "store": "bazaario",
+    "expected": {
+      "name": "Kiran Cricket Bat",
+      "price_cents": 8856000,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": {
+      "store": "bazaario",
+      "product_id": "bz-088",
+      "url": "https://bazaario.example/dp/bz-088",
+      "name": "Kiran Cricket Bat",
+      "price_cents": 8856000,
+      "currency": "INR",
+      "compare_at_cents": 10809400,
+      "availability": "unknown",
+      "pack_size": 1,
+      "unit_price_cents": null,
+      "observed_at": "2026-09-10T21:37:05.620441+00:00",
+      "source": "llm",
+      "notes": []
+    },
+    "error_types": [
+      "wrong_availability"
+    ]
+  },
+  {
+    "snapshot": "bz-089",
+    "store": "bazaario",
+    "expected": {
+      "name": "Kiran Copper Water Bottle",
+      "price_cents": 6895700,
+      "currency": "INR",
+      "availability": "in_stock",
+      "pack_size": 1
+    },
+    "predicted": null,
+    "error_types": [
+      "wrong_price",
+      "wrong_currency",
+      "wrong_availability",
+      "wrong_pack_size",
+      "malformed_output"
+    ]
+  }
+]

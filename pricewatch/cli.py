@@ -42,7 +42,7 @@ def cmd_extract(a: argparse.Namespace) -> int:
         print("cannot infer --store from url", file=sys.stderr)
         return 2
     client = Client()
-    html = Path(a.html).read_text() if a.html else client.get(a.url).text
+    html = Path(a.html).read_text(encoding="utf-8") if a.html else client.get(a.url).text
     if a.llm:
         from .agents.llm_extractor import extract_with_llm
         from .providers import load_provider
@@ -61,10 +61,11 @@ def cmd_watch(a: argparse.Namespace) -> int:
     alerts = [x.to_dict() for x in watcher.evaluate(history, new, rules)]
     text = json.dumps(alerts, indent=2)
     if a.out:
-        Path(a.out).write_text(text)
+        Path(a.out).write_text(text, encoding="utf-8")
     else:
         print(text)
     return 0
+
 
 
 def cmd_eval(a: argparse.Namespace) -> int:
@@ -85,6 +86,7 @@ def cmd_serve(a: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s", stream=sys.stderr)
     p = argparse.ArgumentParser(prog="pricewatch")
+    p.add_argument("--debug", action="store_true", help="Enable debug logging and unhandled stacktraces")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("scan"); s.set_defaults(fn=cmd_scan)
@@ -107,8 +109,26 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--port", type=int, default=8000); s.add_argument("--db", default="pricewatch.db")
 
     a = p.parse_args(argv)
-    return a.fn(a)
+    if a.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    try:
+        return a.fn(a)
+    except Exception as e:
+        import requests
+        if not a.debug and (isinstance(e, requests.exceptions.ConnectionError) or "ConnectionRefused" in str(e) or "Max retries exceeded" in str(e)):
+            print(
+                f"Error: Unable to connect to PriceWatch store service.\n"
+                f"Please ensure the fake store server is running locally on port 4000.\n\n"
+                f"To start the fake store service:\n"
+                f"  docker run --rm -p 4000:4000 -e STORE_SEED=public ghcr.io/i95dev/pricewatch-stores:latest\n\n"
+                f"Or see README.md -> Local Setup for details.",
+                file=sys.stderr,
+            )
+            return 1
+        raise
 
 
 if __name__ == "__main__":
     sys.exit(main())
+

@@ -42,6 +42,11 @@ class EchoProvider:
 
 
 def load_provider(name: str | None = None) -> Provider:
+    try:
+        import dotenv
+        dotenv.load_dotenv()
+    except ImportError:
+        pass
     path = os.environ.get("PRICEWATCH_PROVIDER_PATH")
     if path:
         spec = importlib.util.spec_from_file_location("pw_injected_provider", path)
@@ -57,4 +62,11 @@ def load_provider(name: str | None = None) -> Provider:
     if name == "anthropic":
         from .anthropic_provider import AnthropicProvider
         return AnthropicProvider()
+    if name == "groq":
+        from .groq_provider import GroqProvider
+        return GroqProvider()
+    if name in ("gemini", "google"):
+        from .gemini_provider import GeminiProvider
+        return GeminiProvider()
     raise ProviderError(f"unknown provider {name!r}")
+

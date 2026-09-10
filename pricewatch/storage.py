@@ -45,10 +45,11 @@ def read_jsonl(path: str | Path) -> list[Observation]:
     p = Path(path)
     if not p.exists():
         return []
-    return [Observation.from_dict(json.loads(line)) for line in p.read_text().splitlines() if line.strip()]
+    return [Observation.from_dict(json.loads(line)) for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
 def write_jsonl(path: str | Path, obs: Iterable[Observation], append: bool = False) -> None:
-    with open(path, "a" if append else "w") as f:
+    with open(path, "a" if append else "w", encoding="utf-8") as f:
         for o in obs:
             f.write(json.dumps(o.to_dict()) + "\n")
+

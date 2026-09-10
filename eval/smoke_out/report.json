@@ -1,0 +1,45 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "n": 5,
+  "overall": {
+    "price_exact": 1.0,
+    "currency": 1.0,
+    "availability": 1.0,
+    "pack_size": 1.0
+  },
+  "per_store": {
+    "bazaario": {
+      "n": 3,
+      "price_exact": 1.0,
+      "currency": 1.0,
+      "availability": 1.0,
+      "pack_size": 1.0
+    },
+    "nordkart": {
+      "n": 2,
+      "price_exact": 1.0,
+      "currency": 1.0,
+      "availability": 1.0,
+      "pack_size": 1.0
+    }
+  },
+  "errors": {
+    "timeout": 0,
+    "malformed_output": 0,
+    "provider_error": 0
+  },
+  "cost": {
+    "input_tokens": 740,
+    "output_tokens": 250,
+    "usd_estimate": 0.0003
+  },
+  "latency_ms": {
+    "p50": 3274.1,
+    "p95": 3709.5
+  },
+  "baseline": {
+    "price_exact": 0.0
+  },
+  "elapsed_s": 16.6
+}
