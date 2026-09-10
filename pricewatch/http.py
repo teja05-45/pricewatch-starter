@@ -77,10 +77,6 @@ class Client:
             return False
 
         with self._challenge_lock:
-            # Re-check if cookie was already set by another thread
-            if "shield_clearance" in self.session.cookies or "shield_session" in self.session.cookies:
-                return True
-
             soup = BeautifulSoup(r.text, "html.parser")
             cf_el = soup.find(id="cf-c")
             if not cf_el or not cf_el.get("data-s") or not cf_el.get("data-p"):

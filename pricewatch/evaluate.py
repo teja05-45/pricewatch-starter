@@ -200,9 +200,59 @@ def run(provider: Provider, snapshots_dir: str | Path, labels_path: str | Path, 
         "elapsed_s": round(time.time() - t0, 2),
     }
 
-    label_issues = [
-        {"id": "bz-052", "reason": "label uses the EMI monthly amount, not the price"}
-    ]
+    # Generic label issue detection (detecting label anomalies against HTML evidence)
+    label_issues = []
+    from bs4 import BeautifulSoup
+    from .agents.normalizer import parse_money
+
+    for row in labels:
+        snap_id = row.get("id")
+        exp_cents = row.get("expected", {}).get("price_cents")
+        file_path = snapshots_dir / row.get("file", "")
+
+        if not snap_id or not file_path.exists() or exp_cents is None:
+            continue
+
+        try:
+            html = file_path.read_text(encoding="utf-8")
+            soup = BeautifulSoup(html, "html.parser")
+            reason = None
+
+            exp_dollars = exp_cents / 100.0
+            exp_int = int(exp_dollars) if exp_dollars.is_integer() else exp_dollars
+
+            # 1. EMI / Monthly check
+            for el in soup.find_all(["div", "p", "span", "b", "strong", "li"]):
+                txt = el.get_text(" ", strip=True)
+                if any(kw in txt.lower() for kw in ["emi", "per month", "/month", "/mo", "monthly", "installment"]):
+                    val_cents, _ = parse_money(txt)
+                    if val_cents == exp_cents or str(exp_int) in txt:
+                        reason = "label uses the EMI monthly amount, not the price"
+                        break
+
+            # 2. List / struck-through price check
+            if not reason:
+                for s_tag in soup.find_all(["s", "del"]):
+                    txt = s_tag.get_text()
+                    val_cents, _ = parse_money(txt)
+                    if val_cents == exp_cents or str(exp_int) in txt:
+                        reason = "label uses original/list price instead of sale price"
+                        break
+
+            # 3. Discount check
+            if not reason:
+                for el in soup.find_all(["div", "p", "span"]):
+                    txt = el.get_text(" ", strip=True)
+                    if any(kw in txt.lower() for kw in ["save", "discount", "off"]):
+                        val_cents, _ = parse_money(txt)
+                        if val_cents == exp_cents:
+                            reason = "label uses discount amount instead of selling price"
+                            break
+
+            if reason:
+                label_issues.append({"id": snap_id, "reason": reason})
+        except Exception:
+            pass
 
     (out_dir / "report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     (out_dir / "label_issues.json").write_text(json.dumps(label_issues, indent=2), encoding="utf-8")

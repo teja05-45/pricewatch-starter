@@ -129,6 +129,20 @@ def extract_zon(client: Client, store: str, url: str, html: str) -> Observation:
             store=store, product_id=pid, url=url, name="", price_cents=None, currency="USD", notes=["robot check page"]
         )
 
+    # If main box asks to select variant and we have variant links, fetch first variant page
+    page_text_lower = soup.get_text().lower()
+    if ("select a colour" in page_text_lower or "select a variant" in page_text_lower or "select an option" in page_text_lower or "select a color" in page_text_lower) and not urlparse(url).query:
+        variant_a = soup.select_one("a[href*='variant=']")
+        if variant_a and variant_a.get("href"):
+            variant_url = urljoin(url, variant_a["href"])
+            try:
+                r_var = client.get(variant_url)
+                if r_var.status_code == 200:
+                    html = r_var.text
+                    soup = BeautifulSoup(html, "html.parser")
+            except Exception:
+                pass
+
     # Dynamic title extraction (avoiding seed-specific class names)
     title_el = soup.find("h1") or soup.find("h2")
     if not title_el:
@@ -148,37 +162,76 @@ def extract_zon(client: Client, store: str, url: str, html: str) -> Observation:
 
     clean_name = re.sub(r"\s*\(?Pack of \d+\)?", "", full_title, flags=re.IGNORECASE).strip()
 
+    # Isolate main offer container by decomposing "Other sellers" section
+    main_soup = BeautifulSoup(str(soup), "html.parser")
+    for el in main_soup.find_all(["div", "section", "h3", "h4"]):
+        if "other sellers" in el.get_text().lower() and el.name in ("h3", "h4"):
+            p = el.parent
+            if p:
+                p.decompose()
+            break
+
+    page_text_lower = main_soup.get_text().lower()
+    avail = "out_of_stock" if ("out of stock" in page_text_lower or "currently unavailable" in page_text_lower) else "in_stock"
+
     price_cents: Optional[int] = None
+    compare_at_cents: Optional[int] = None
     currency = "USD"
 
-    # Strategy 1: Explicit dollar string like $29.99
-    price_matches = re.findall(r"\$\s*(\d+)(?:\.(\d{2}))?", html)
-    if price_matches:
-        for w, f in price_matches:
-            val = int(w) * 100 + (int(f) if f else 0)
-            if val > 0:
+    if avail == "in_stock":
+        # Compare-at / List price (inside <s>, <del>, or preceded by List Price:)
+        for list_el in main_soup.find_all(["s", "del"]):
+            c_val, _ = parse_money(list_el.get_text(), currency)
+            if c_val:
+                compare_at_cents = c_val
+                list_el.decompose()
+
+        for el in main_soup.find_all(string=re.compile(r"List Price:", re.I)):
+            parent = el.parent
+            if parent:
+                c_val, _ = parse_money(parent.get_text(), currency)
+                if c_val:
+                    compare_at_cents = c_val
+                    parent.decompose()
+
+        # Look for explicit "Pack of X: $YYY.YY" pattern
+        raw_text = main_soup.get_text(" ", strip=True)
+        norm_text = re.sub(r"\$\s+", "$", raw_text)
+        norm_text = re.sub(r"\s*\.\s*", ".", norm_text)
+
+        pack_text_match = re.search(r"Pack of \d+:\s*\$\s*([\d,]+(?:\.\d{2})?)", norm_text, re.I)
+        if pack_text_match:
+            val, _ = parse_money(pack_text_match.group(1), currency)
+            if val:
                 price_cents = val
-                break
 
-    # Strategy 2: Whole and fraction split elements
-    if price_cents is None:
-        for container in soup.find_all(["div", "span"]):
-            nums = [s.get_text(strip=True) for s in container.find_all(["span", "div"]) if s.get_text(strip=True).isdigit()]
-            if len(nums) == 2 and len(nums[1]) in (1, 2):
-                try:
-                    price_cents = int(nums[0]) * 100 + int(nums[1].ljust(2, "0"))
-                    break
-                except ValueError:
-                    pass
+        if price_cents is None:
+            # Extract price candidates from main offer container
+            for el in main_soup.find_all(["div", "p", "span"]):
+                txt = el.get_text(" ", strip=True)
+                if "/ count" in txt or "/ unit" in txt or "/ item" in txt or "other sellers" in txt.lower():
+                    continue
+                txt_clean = re.sub(r"\$\s+", "$", txt)
+                txt_clean = re.sub(r"\s*\.\s*", ".", txt_clean)
+                m_p = re.search(r"\$\s*([\d,]+(?:\.\d{2})?)", txt_clean)
+                if m_p:
+                    val, _ = parse_money(m_p.group(1), currency)
+                    if val and val != compare_at_cents:
+                        price_cents = val
+                        break
 
-    # Strategy 3: Text content containing dollar or number
-    if price_cents is None:
-        m_num = re.search(r"\b(\d+)\.(\d{2})\b", html)
-        if m_num:
-            price_cents = int(m_num.group(1)) * 100 + int(m_num.group(2))
-
-    page_text_lower = soup.get_text().lower()
-    avail = "out_of_stock" if "out of stock" in page_text_lower or "currently unavailable" in page_text_lower else "in_stock"
+        # Fallback: Whole and fraction split elements without dollar symbol
+        if price_cents is None:
+            for container in main_soup.find_all(["div", "span"]):
+                nums = [s.get_text(strip=True) for s in container.find_all(["span", "div"]) if s.get_text(strip=True).isdigit()]
+                if len(nums) == 2 and len(nums[1]) in (1, 2):
+                    try:
+                        val = int(nums[0]) * 100 + int(nums[1].ljust(2, "0"))
+                        if val != compare_at_cents:
+                            price_cents = val
+                            break
+                    except ValueError:
+                        pass
 
     return Observation(
         store=store,
@@ -187,10 +240,11 @@ def extract_zon(client: Client, store: str, url: str, html: str) -> Observation:
         name=clean_name or full_title,
         price_cents=price_cents,
         currency=currency,
+        compare_at_cents=compare_at_cents,
         availability=avail,
         pack_size=pack,
         unit_price_cents=unit_price(price_cents, pack),
-        notes=[] if price_cents is not None else ["no price found"],
+        notes=[] if price_cents is not None or avail == "out_of_stock" else ["no price found"],
     )
 
 
@@ -338,8 +392,13 @@ def extract_flux(client: Client, store: str, url: str, html: str) -> Observation
     build_meta = soup.find("meta", attrs={"name": "flux-build"})
     build_val = build_meta.get("content") if build_meta else "v1.0"
 
-    # 3. Compute GraphQL signature: SHA-256("fx_1b11e1" + "e8cfb25a950a27" + "|" + sku)[:24]
-    sig_raw = f"fx_1b11e1e8cfb25a950a27|{sku}"
+    # 3. Compute GraphQL signature dynamically
+    sig_prefix_meta = soup.find("meta", attrs={"name": re.compile(r"flux-(?:sig-prefix|prefix|sig|secret)", re.I)})
+    sig_prefix = sig_prefix_meta.get("content") if (sig_prefix_meta and sig_prefix_meta.get("content")) else None
+    if not sig_prefix:
+        m_sig = re.search(r'\b(fx_[a-f0-9]{12,24})\b', html)
+        sig_prefix = m_sig.group(1) if m_sig else "fx_1b11e1e8cfb25a950a27"
+    sig_raw = f"{sig_prefix}|{sku}"
     sig = hashlib.sha256(sig_raw.encode("utf-8")).hexdigest()[:24]
 
     # 4. Issue GraphQL POST request
