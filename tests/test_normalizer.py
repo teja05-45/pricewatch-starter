@@ -41,3 +41,15 @@ def test_malformed_prices():
     assert parse_money("Price on request", "USD") == (None, "USD")
     assert parse_money("", "USD") == (None, "USD")
 
+
+def test_spaced_dollar_decimals():
+    assert parse_money("$ 125 . 51", "USD") == (12551, "USD")
+    assert parse_money("$ 1,420 . 14", "USD") == (142014, "USD")
+    assert parse_money("$ 264 . 76", "USD") == (26476, "USD")
+
+
+def test_comma_spaced_decimal():
+    assert parse_money("$ 1,506 . 12", "USD") == (150612, "USD")
+    assert parse_money("1,420.14", "USD") == (142014, "USD")
+
+

@@ -9,12 +9,19 @@ from pricewatch.http import Client
 
 
 def test_shield_test_a_challenge_parsing():
-    """Test A: Challenge SHA256 answer calculation given data-s and data-p."""
+    """Test A: Challenge SHA256 answer calculation given data-s and data-p.
+
+    The fake server JS does:
+        digest = SHA256(s + "|" + p)
+        answer = hex_digest.slice(0, 16)
+    """
     s = "abc123"
     p = "/stores/shield/item/test"
-    answer = hashlib.sha256(f"{s}|{p}".encode("utf-8")).hexdigest()[:16]
+    raw = f"{s}|{p}"
+    answer = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
     assert len(answer) == 16
-    assert answer == hashlib.sha256(b"abc123|/stores/shield/item/test").hexdigest()[:16]
+    expected = hashlib.sha256(b"abc123|/stores/shield/item/test").hexdigest()[:16]
+    assert answer == expected
 
 
 def test_shield_test_b_challenge_post_same_session():

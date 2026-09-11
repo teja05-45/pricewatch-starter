@@ -8,6 +8,7 @@ Adapters are registered by name; `stores.yaml` maps each store to an adapter.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from typing import Callable, Optional
@@ -162,24 +163,49 @@ def extract_zon(client: Client, store: str, url: str, html: str) -> Observation:
 
     clean_name = re.sub(r"\s*\(?Pack of \d+\)?", "", full_title, flags=re.IGNORECASE).strip()
 
-    # Isolate main offer container by decomposing "Other sellers" section
+    # Create a working copy for price extraction
     main_soup = BeautifulSoup(str(soup), "html.parser")
-    for el in main_soup.find_all(["div", "section", "h3", "h4"]):
-        if "other sellers" in el.get_text().lower() and el.name in ("h3", "h4"):
-            p = el.parent
-            if p:
-                p.decompose()
-            break
+
+    # Remove "Other sellers" and similar offer sections aggressively
+    # Find headers that indicate seller/offer sections and remove their containers
+    for header in main_soup.find_all(["h2", "h3", "h4", "h5"]):
+        header_text = header.get_text(strip=True).lower()
+        if any(kw in header_text for kw in ["other sellers", "more buying", "buying options", "offer from", "sold by"]):
+            container = header.find_parent(["div", "section", "article"])
+            if container:
+                container.decompose()
+            else:
+                header.decompose()
+
+    # Also remove any elements with "from X Direct" pattern (seller lines)
+    for el in main_soup.find_all(string=re.compile(r"from\s+\w+\s+Direct", re.I)):
+        parent = el.parent
+        if parent:
+            parent.decompose()
 
     page_text_lower = main_soup.get_text().lower()
     avail = "out_of_stock" if ("out of stock" in page_text_lower or "currently unavailable" in page_text_lower) else "in_stock"
+
+    # Check for explicit "price unavailable" indicators BEFORE attempting extraction
+    # These indicate the primary product price is not shown - do NOT fall back to seller prices
+    unavailable_indicators = [
+        "see price in cart",
+        "select a colour to see price",
+        "select a color to see price",
+        "select a variant to see price",
+        "select an option to see price",
+        "select colour to see price",
+        "select color to see price",
+        "select variant to see price",
+    ]
+    price_unavailable = any(ind in page_text_lower for ind in unavailable_indicators)
 
     price_cents: Optional[int] = None
     compare_at_cents: Optional[int] = None
     currency = "USD"
 
-    if avail == "in_stock":
-        # Compare-at / List price (inside <s>, <del>, or preceded by List Price:)
+    if avail == "in_stock" and not price_unavailable:
+        # Compare-at / List price (inside , <del>, or preceded by List Price:)
         for list_el in main_soup.find_all(["s", "del"]):
             c_val, _ = parse_money(list_el.get_text(), currency)
             if c_val:
@@ -194,22 +220,42 @@ def extract_zon(client: Client, store: str, url: str, html: str) -> Observation:
                     compare_at_cents = c_val
                     parent.decompose()
 
-        # Look for explicit "Pack of X: $YYY.YY" pattern
+        # Strategy 1: Look for explicit "Pack of X: $YYY.YY" pattern (total pack price)
+        # But prefer the unit/count price if both are present
         raw_text = main_soup.get_text(" ", strip=True)
         norm_text = re.sub(r"\$\s+", "$", raw_text)
         norm_text = re.sub(r"\s*\.\s*", ".", norm_text)
 
         pack_text_match = re.search(r"Pack of \d+:\s*\$\s*([\d,]+(?:\.\d{2})?)", norm_text, re.I)
+        pack_total_price = None
         if pack_text_match:
             val, _ = parse_money(pack_text_match.group(1), currency)
             if val:
-                price_cents = val
+                pack_total_price = val
 
-        if price_cents is None:
-            # Extract price candidates from main offer container
+        # Strategy 2: Look for primary price with "/ count" or "/ unit" or "/ item" indicator
+        # This is the displayed unit price for pack products
+        unit_price_cents: Optional[int] = None
+        for el in main_soup.find_all(["div", "p", "span"]):
+            txt = el.get_text(" ", strip=True)
+            if any(kw in txt.lower() for kw in ["/ count", "/ unit", "/ item", "per count", "per unit", "per item"]):
+                txt_clean = re.sub(r"\$\s+", "$", txt)
+                txt_clean = re.sub(r"\s*\.\s*", ".", txt_clean)
+                m_p = re.search(r"\$\s*([\d,]+(?:\.\d{2})?)", txt_clean)
+                if m_p:
+                    val, _ = parse_money(m_p.group(1), currency)
+                    if val and val != compare_at_cents:
+                        unit_price_cents = val
+                        break
+
+        # Strategy 3: Generic price extraction from main offer area
+        # Look for split price elements: $ + whole + . + fractional
+        generic_price_cents: Optional[int] = None
+        if unit_price_cents is None:
             for el in main_soup.find_all(["div", "p", "span"]):
                 txt = el.get_text(" ", strip=True)
-                if "/ count" in txt or "/ unit" in txt or "/ item" in txt or "other sellers" in txt.lower():
+                # Skip seller-related content
+                if any(kw in txt.lower() for kw in ["/ count", "/ unit", "/ item", "other sellers", "from ", "direct", "buying option"]):
                     continue
                 txt_clean = re.sub(r"\$\s+", "$", txt)
                 txt_clean = re.sub(r"\s*\.\s*", ".", txt_clean)
@@ -217,21 +263,39 @@ def extract_zon(client: Client, store: str, url: str, html: str) -> Observation:
                 if m_p:
                     val, _ = parse_money(m_p.group(1), currency)
                     if val and val != compare_at_cents:
-                        price_cents = val
+                        generic_price_cents = val
                         break
 
-        # Fallback: Whole and fraction split elements without dollar symbol
-        if price_cents is None:
+        # Strategy 4: Fallback - split elements without dollar symbol (whole + fractional cents)
+        split_price_cents: Optional[int] = None
+        if unit_price_cents is None and generic_price_cents is None:
             for container in main_soup.find_all(["div", "span"]):
                 nums = [s.get_text(strip=True) for s in container.find_all(["span", "div"]) if s.get_text(strip=True).isdigit()]
                 if len(nums) == 2 and len(nums[1]) in (1, 2):
                     try:
                         val = int(nums[0]) * 100 + int(nums[1].ljust(2, "0"))
                         if val != compare_at_cents:
-                            price_cents = val
+                            split_price_cents = val
                             break
                     except ValueError:
                         pass
+
+        # Priority: unit price > generic price > split price > pack total price
+        # (pack_total_price is the total for the pack, not the displayed unit price)
+        if unit_price_cents is not None:
+            price_cents = unit_price_cents
+        elif generic_price_cents is not None:
+            price_cents = generic_price_cents
+        elif split_price_cents is not None:
+            price_cents = split_price_cents
+        elif pack_total_price is not None:
+            # Only use pack total if no unit price found (for non-pack products or when unit price truly absent)
+            price_cents = pack_total_price
+
+    # Determine notes
+    notes: list[str] = []
+    if price_cents is None and avail == "in_stock":
+        notes.append("no price found")
 
     return Observation(
         store=store,
@@ -244,11 +308,9 @@ def extract_zon(client: Client, store: str, url: str, html: str) -> Observation:
         availability=avail,
         pack_size=pack,
         unit_price_cents=unit_price(price_cents, pack),
-        notes=[] if price_cents is not None or avail == "out_of_stock" else ["no price found"],
+        notes=notes,
     )
 
-
-import hashlib
 
 # --------------------------------------------------------------------------- Level 4: Shield Outfitters
 @adapter("shield")
@@ -375,6 +437,32 @@ def extract_shield(client: Client, store: str, url: str, html: str) -> Observati
     )
 
 
+def _parse_flux_bundle(bundle_text: str) -> tuple[str, int]:
+    secret = ""
+    m_arr = re.search(r"\[\s*([\"']fx_[^\"']+[\"'](?:\s*,\s*[\"'][^\"']+[\"'])*)\s*\]", bundle_text)
+    if m_arr:
+        items = re.findall(r"[\"']([^\"']+)[\"']", m_arr.group(1))
+        secret = "".join(items)
+
+    if not secret:
+        m_str = re.search(r"[\"'](fx_[a-zA-Z0-9_-]+)[\"']", bundle_text)
+        if m_str:
+            secret = m_str.group(1)
+
+    sig_len = 40
+    m_slice = re.search(r"\.slice\(0,\s*(\d+|\w+)\)", bundle_text)
+    if m_slice:
+        val = m_slice.group(1)
+        if val.isdigit():
+            sig_len = int(val)
+        else:
+            m_var = re.search(rf"\b{re.escape(val)}\s*=\s*(\d+)", bundle_text)
+            if m_var:
+                sig_len = int(m_var.group(1))
+
+    return secret, sig_len
+
+
 # --------------------------------------------------------------------------- Level 5: Flux
 @adapter("flux")
 def extract_flux(client: Client, store: str, url: str, html: str) -> Observation:
@@ -390,16 +478,35 @@ def extract_flux(client: Client, store: str, url: str, html: str) -> Observation
 
     # 2. Extract build token from <meta name="flux-build" content="...">
     build_meta = soup.find("meta", attrs={"name": "flux-build"})
-    build_val = build_meta.get("content") if build_meta else "v1.0"
+    build_val = build_meta.get("content") if (build_meta and build_meta.get("content")) else "v1.0"
 
-    # 3. Compute GraphQL signature dynamically
-    sig_prefix_meta = soup.find("meta", attrs={"name": re.compile(r"flux-(?:sig-prefix|prefix|sig|secret)", re.I)})
-    sig_prefix = sig_prefix_meta.get("content") if (sig_prefix_meta and sig_prefix_meta.get("content")) else None
-    if not sig_prefix:
-        m_sig = re.search(r'\b(fx_[a-f0-9]{12,24})\b', html)
-        sig_prefix = m_sig.group(1) if m_sig else "fx_1b11e1e8cfb25a950a27"
-    sig_raw = f"{sig_prefix}|{sku}"
-    sig = hashlib.sha256(sig_raw.encode("utf-8")).hexdigest()[:24]
+    # 3. Discover bundle script and parse signing material
+    script_el = soup.find("script", src=re.compile(r"bundle|\bflux\b", re.I)) or soup.find("script", src=True)
+    script_src = script_el.get("src") if script_el else "/stores/flux/bundle.js"
+    bundle_url = urljoin(url, script_src)
+
+    secret = ""
+    sig_len = 40
+    try:
+        r_bundle = client.get(bundle_url)
+        if r_bundle.status_code == 200:
+            secret, sig_len = _parse_flux_bundle(r_bundle.text)
+    except Exception:
+        pass
+
+    if not secret:
+        # Try to find secret in page HTML as last resort
+        m_sig = re.search(r'\b(fx_[a-f0-9]{6,32})\b', html)
+        if m_sig:
+            secret = m_sig.group(1)
+            sig_len = 24 if len(secret) <= 24 else 40
+        else:
+            # No secret found - cannot sign request
+            secret = ""
+            sig_len = 40
+
+    sig_raw = f"{secret}|{sku}"
+    sig = hashlib.sha256(sig_raw.encode("utf-8")).hexdigest()[:sig_len]
 
     # 4. Issue GraphQL POST request
     graphql_url = urljoin(url, "/stores/flux/api/graphql")
@@ -450,8 +557,11 @@ def extract_flux(client: Client, store: str, url: str, html: str) -> Observation
 
     # Availability
     stock = offer.get("stock")
-    if stock is False or stock == 0 or stock == "out_of_stock":
+    stock_str = str(stock).upper() if stock is not None else ""
+    if stock_str in ("OUT_OF_STOCK", "FALSE", "0") or stock is False or stock == 0:
         avail = "out_of_stock"
+    elif stock_str in ("IN_STOCK", "TRUE", "1") or stock is True or stock == 1:
+        avail = "in_stock"
     else:
         page_text = soup.get_text().lower()
         avail = "out_of_stock" if "out of stock" in page_text else "in_stock"
@@ -493,10 +603,8 @@ def extract_flux(client: Client, store: str, url: str, html: str) -> Observation
     )
 
 
-
 def extract(client: Client, store: str, adapter_name: str, url: str, html: str) -> Observation:
     fn = ADAPTERS.get(adapter_name)
     if fn is None:
         raise KeyError(f"no adapter named {adapter_name!r}")
     return fn(client, store, url, html)
-

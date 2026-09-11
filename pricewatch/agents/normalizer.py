@@ -46,8 +46,9 @@ def parse_money(text: str | None, default_currency: Optional[str] = None) -> tup
     currency = detect_currency(text, default_currency)
 
     # Clean text to find the main numeric block
-    # Remove non-breaking spaces and simplify whitespace
+    # Remove non-breaking spaces, collapse spaces around punctuation, simplify whitespace
     clean_text = text.replace("\xa0", " ").strip()
+    clean_text = re.sub(r"\s*([.,])\s*", r"\1", clean_text)
 
     # Find candidate number pattern with digits, commas, periods, spaces
     # Example: 1,299.00 or 937,20 or 1.299,00 or 1 299,00 or 596

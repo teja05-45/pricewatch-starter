@@ -72,7 +72,7 @@ class Client:
         return None
 
     def _solve_shield_challenge(self, r: requests.Response) -> bool:
-        """Solves Shield 503 challenge: SHA-256(challenge + '|' + path)[:16]."""
+        """Solves Shield 503 challenge: SHA-256(s + '|' + p)[:16]."""
         if "cf-c" not in r.text:
             return False
 
@@ -85,7 +85,8 @@ class Client:
             s = str(cf_el["data-s"])
             p = str(cf_el["data-p"])
 
-            # SHA-256(challenge + "|" + path)[:16]
+            # s = data-s, p = data-p
+            # SHA-256(s + "|" + p)[:16]
             raw_str = f"{s}|{p}"
             answer = hashlib.sha256(raw_str.encode("utf-8")).hexdigest()[:16]
 
