@@ -127,6 +127,9 @@ class Client:
         host_lock = self._get_host_lock(host)
 
         with host_lock:
+            # Remove Zon tracking session cookie if set to avoid "See price in cart" markup mutation
+            if "zsid" in self.session.cookies:
+                self.session.cookies.pop("zsid", None)
             last_exc: Exception | None = None
             for attempt in range(self.retries + 1):
                 self._throttle(url)

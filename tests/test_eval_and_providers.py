@@ -53,6 +53,22 @@ def test_anthropic_provider_with_only_anthropic_key():
         assert p.model == "claude-3-5-sonnet-20241022"
 
 
+def test_anthropic_provider_complete_mocked():
+    mock_anthropic = MagicMock()
+    mock_client = MagicMock()
+    mock_msg_content = [MagicMock(text='{"name": "Test Product", "price_cents": 2999, "currency": "USD", "availability": "in_stock", "pack_size": 1}')]
+    mock_response = MagicMock(content=mock_msg_content)
+    mock_client.messages.create.return_value = mock_response
+    mock_anthropic.Anthropic.return_value = mock_client
+
+    with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-test12345"}, clear=True), \
+         patch.dict(sys.modules, {"anthropic": mock_anthropic}):
+        p = AnthropicProvider()
+        res = p.complete("sys prompt", "user prompt", metadata={"source_url": "http://example.com/p1"})
+        assert "price_cents" in res
+        assert "2999" in res
+
+
 def test_openai_provider_missing_key():
     with patch.dict(os.environ, {}, clear=True):
         with pytest.raises(ProviderError):

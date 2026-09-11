@@ -158,53 +158,10 @@ def parse_llm_json(raw: str) -> dict:
         text = re.sub(r"\s*```$", "", text)
     text = text.strip()
 
-    # Attempt 1: Direct JSON parse
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-
-    # Attempt 2: Extract JSON object substring via regex
-    m = re.search(r"(\{.*\})", text, re.DOTALL)
-    if m:
-        sub = m.group(1).strip()
-        try:
-            return json.loads(sub)
-        except json.JSONDecodeError:
-            # Attempt 3: Robust cleanup of trailing commas & control chars
-            cleaned = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", sub)
-            cleaned = re.sub(r",\s*([\}\]])", r"\1", cleaned)
-            try:
-                return json.loads(cleaned)
-            except json.JSONDecodeError:
-                pass
-
-    # Attempt 4: Fallback regex field extraction
-    fallback_data = {}
-    name_m = re.search(r'"name"\s*:\s*"([^"]+)"', text)
-    if name_m:
-        fallback_data["name"] = name_m.group(1)
-
-    price_m = re.search(r'"price_cents"\s*:\s*(\d+)', text)
-    if price_m:
-        fallback_data["price_cents"] = int(price_m.group(1))
-
-    curr_m = re.search(r'"currency"\s*:\s*"([A-Z]{3})"', text, re.IGNORECASE)
-    if curr_m:
-        fallback_data["currency"] = curr_m.group(1).upper()
-
-    avail_m = re.search(r'"availability"\s*:\s*"(in_stock|out_of_stock|unknown)"', text, re.IGNORECASE)
-    if avail_m:
-        fallback_data["availability"] = avail_m.group(1).lower()
-
-    pack_m = re.search(r'"pack_size"\s*:\s*(\d+)', text)
-    if pack_m:
-        fallback_data["pack_size"] = int(pack_m.group(1))
-
-    if fallback_data:
-        return fallback_data
-
-    return json.loads(text)
+    res = json.loads(text)
+    if not isinstance(res, dict):
+        raise json.JSONDecodeError("JSON root must be an object", text, 0)
+    return res
 
 
 def extract_with_llm(provider: Provider, store: str, url: str, html: str, timeout: float = 30.0) -> Observation:
@@ -238,27 +195,31 @@ def extract_with_llm(provider: Provider, store: str, url: str, html: str, timeou
         currency = detect_currency(premined['text_summary'], "USD") or "USD"
 
     # 3. Normalize Price Cents
-    price_cents = data.get("price_cents")
-    if price_cents is not None:
+    raw_price = data.get("price_cents")
+    price_cents: Optional[int] = None
+    if raw_price is not None:
         try:
-            price_cents = int(price_cents)
-            if price_cents < 0:
-                price_cents = None
+            val_float = float(str(raw_price).replace(",", "").strip())
+            if val_float > 0:
+                if currency in ZERO_DECIMAL_CURRENCIES:
+                    price_cents = int(round(val_float))
+                else:
+                    if isinstance(raw_price, float) or "." in str(raw_price):
+                        price_cents = int(round(val_float * 100))
+                    else:
+                        price_cents = int(val_float)
         except (ValueError, TypeError):
             price_cents = None
 
     # Deterministic Override Guard for EMI / Monthly / Unit traps
     if price_cents is not None and premined["price_candidates"]:
-        # Find candidates flagged as main selling price vs EMI/unit
         selling_candidates = [c for c in premined["price_candidates"] if not c["is_emi"] and not c["is_unit"] and not c["is_crossed_out"] and not c["is_list"]]
         emi_candidates = [c for c in premined["price_candidates"] if c["is_emi"]]
         
-        # Check if model accidentally selected an EMI candidate price
         if emi_candidates and selling_candidates:
             for emi_c in emi_candidates:
                 parsed_emi, _ = parse_money(emi_c["value"], currency)
                 if parsed_emi and price_cents in (parsed_emi, parsed_emi * 100):
-                    # Override with main selling price candidate!
                     for sell_c in selling_candidates:
                         parsed_sell, _ = parse_money(sell_c["value"], currency)
                         if parsed_sell:
@@ -266,12 +227,19 @@ def extract_with_llm(provider: Provider, store: str, url: str, html: str, timeou
                             break
 
     # 4. Compare-At Cents
-    compare_at_cents = data.get("compare_at_cents")
-    if compare_at_cents is not None:
+    raw_compare = data.get("compare_at_cents")
+    compare_at_cents: Optional[int] = None
+    if raw_compare is not None:
         try:
-            compare_at_cents = int(compare_at_cents)
-            if compare_at_cents < 0:
-                compare_at_cents = None
+            val_float = float(str(raw_compare).replace(",", "").strip())
+            if val_float > 0:
+                if currency in ZERO_DECIMAL_CURRENCIES:
+                    compare_at_cents = int(round(val_float))
+                else:
+                    if isinstance(raw_compare, float) or "." in str(raw_compare):
+                        compare_at_cents = int(round(val_float * 100))
+                    else:
+                        compare_at_cents = int(val_float)
         except (ValueError, TypeError):
             compare_at_cents = None
 

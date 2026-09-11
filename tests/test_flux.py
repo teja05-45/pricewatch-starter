@@ -17,7 +17,7 @@ def test_flux_bundle_parsing_secret_and_sig_len():
         }
     }();
     """
-    secret, sig_len = _parse_flux_bundle(bundle_js)
+    secret, sig_len, algo = _parse_flux_bundle(bundle_js)
     assert secret == "fx_3ad94d3a18a937cf44b6"
     assert sig_len == 40
 

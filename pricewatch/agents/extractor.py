@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import time
 from typing import Callable, Optional
 from urllib.parse import urljoin, urlparse
 
@@ -437,7 +438,7 @@ def extract_shield(client: Client, store: str, url: str, html: str) -> Observati
     )
 
 
-def _parse_flux_bundle(bundle_text: str) -> tuple[str, int]:
+def _parse_flux_bundle(bundle_text: str) -> tuple[str, int, str]:
     secret = ""
     m_arr = re.search(r"\[\s*([\"']fx_[^\"']+[\"'](?:\s*,\s*[\"'][^\"']+[\"'])*)\s*\]", bundle_text)
     if m_arr:
@@ -460,7 +461,20 @@ def _parse_flux_bundle(bundle_text: str) -> tuple[str, int]:
             if m_var:
                 sig_len = int(m_var.group(1))
 
-    return secret, sig_len
+    algo = "sha256"
+    m_algo = re.search(r"[\"']SHA-[\"']?\s*\+\s*[\"']?(\w+)[\"']?|[\"']SHA-(\w+)[\"']", bundle_text, re.I)
+    if m_algo:
+        algo_name = (m_algo.group(1) or m_algo.group(2) or "").lower()
+        if algo_name in ("1", "sha1"):
+            algo = "sha1"
+        elif algo_name in ("256", "sha256"):
+            algo = "sha256"
+        elif algo_name in ("384", "sha384"):
+            algo = "sha384"
+        elif algo_name in ("512", "sha512"):
+            algo = "sha512"
+
+    return secret, sig_len, algo
 
 
 # --------------------------------------------------------------------------- Level 5: Flux
@@ -487,10 +501,11 @@ def extract_flux(client: Client, store: str, url: str, html: str) -> Observation
 
     secret = ""
     sig_len = 40
+    algo = "sha256"
     try:
         r_bundle = client.get(bundle_url)
         if r_bundle.status_code == 200:
-            secret, sig_len = _parse_flux_bundle(r_bundle.text)
+            secret, sig_len, algo = _parse_flux_bundle(r_bundle.text)
     except Exception:
         pass
 
@@ -501,14 +516,16 @@ def extract_flux(client: Client, store: str, url: str, html: str) -> Observation
             secret = m_sig.group(1)
             sig_len = 24 if len(secret) <= 24 else 40
         else:
-            # No secret found - cannot sign request
             secret = ""
             sig_len = 40
 
     sig_raw = f"{secret}|{sku}"
-    sig = hashlib.sha256(sig_raw.encode("utf-8")).hexdigest()[:sig_len]
+    try:
+        sig = hashlib.new(algo, sig_raw.encode("utf-8")).hexdigest()[:sig_len]
+    except Exception:
+        sig = hashlib.sha256(sig_raw.encode("utf-8")).hexdigest()[:sig_len]
 
-    # 4. Issue GraphQL POST request
+    # 4. Issue GraphQL POST request with 503/429 retry
     graphql_url = urljoin(url, "/stores/flux/api/graphql")
     headers = {
         "Content-Type": "application/json",
@@ -522,15 +539,22 @@ def extract_flux(client: Client, store: str, url: str, html: str) -> Observation
 
     product = {}
     offer = {}
-    try:
-        r = client.post(graphql_url, json=payload, headers=headers)
-        if r.status_code == 200:
-            data = r.json()
-            if isinstance(data, dict):
-                product = data.get("data", {}).get("product", {}) or {}
-                offer = product.get("offer", {}) or {}
-    except Exception:
-        pass
+    for attempt in range(4):
+        try:
+            r = client.post(graphql_url, json=payload, headers=headers)
+            if r.status_code == 200:
+                data = r.json()
+                if isinstance(data, dict):
+                    product = data.get("data", {}).get("product", {}) or {}
+                    offer = product.get("offer", {}) or {}
+                break
+            elif r.status_code in (429, 503) and attempt < 3:
+                retry_sec = client._parse_retry_after(r.headers.get("Retry-After"))
+                delay = retry_sec if retry_sec is not None else (1.0 * (attempt + 1))
+                time.sleep(delay)
+                continue
+        except Exception:
+            break
 
     # Extract fields from GraphQL offer response
     name = product.get("title") or ""

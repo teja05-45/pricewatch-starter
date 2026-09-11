@@ -1,0 +1,45 @@
+{
+  "provider": "echo",
+  "model": "default",
+  "n": 90,
+  "overall": {
+    "price_exact": 0.0,
+    "currency": 0.5,
+    "availability": 0.87,
+    "pack_size": 0.98
+  },
+  "per_store": {
+    "bazaario": {
+      "n": 45,
+      "price_exact": 0.0,
+      "currency": 1.0,
+      "availability": 0.8,
+      "pack_size": 1.0
+    },
+    "nordkart": {
+      "n": 45,
+      "price_exact": 0.0,
+      "currency": 0.0,
+      "availability": 0.93,
+      "pack_size": 0.96
+    }
+  },
+  "errors": {
+    "timeout": 0,
+    "malformed_output": 0,
+    "provider_error": 0
+  },
+  "cost": {
+    "input_tokens": 13599,
+    "output_tokens": 4500,
+    "usd_estimate": 0.0047
+  },
+  "latency_ms": {
+    "p50": 5.8,
+    "p95": 9.0
+  },
+  "baseline": {
+    "price_exact": 0.0
+  },
+  "elapsed_s": 0.69
+}
